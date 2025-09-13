@@ -515,18 +515,29 @@
             errorDiv.style.display = 'none';
 
             try {
-                const response = await fetch(`${GAS_API_URL}?password=${encodeURIComponent(password)}`);
-                const result = await response.json();
-                
+                // JSONPで取得（CORS回避）
+                const result = await new Promise((resolve, reject) => {
+                    const callbackName = 'jsonp_cb_' + Date.now();
+                    window[callbackName] = function(data) {
+                        resolve(data);
+                        try { delete window[callbackName]; } catch (_) {}
+                        script.remove();
+                    };
+                    const script = document.createElement('script');
+                    script.src = GAS_API_URL + '?password=' + encodeURIComponent(password) + '&callback=' + callbackName;
+                    script.onerror = reject;
+                    document.body.appendChild(script);
+                });
+
                 if (result.error) {
                     showAuthError('パスワードが間違っています');
                     return;
                 }
-                
+
                 // 認証成功
                 localStorage.setItem('sitePassword', password);
                 isAuthenticated = true;
-                
+
                 // データをロード
                 tweets = result.data.slice(1).map(row => ({
                     url: row[0],
