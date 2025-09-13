@@ -205,9 +205,40 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* 自動認証（保存済みパスワード）時の初期表示制御 */
+        .auto-auth #authContainer { display: none !important; }
+        #bootLoader {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 60;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+        .auto-auth #bootLoader { display: flex; }
     </style>
 </head>
 <body class="bg-background text-foreground">
+    <script>
+        // ページ最初期に実行：保存済みパスワードがあれば認証画面を隠してローダーを表示
+        (function () {
+            try {
+                var saved = localStorage.getItem('sitePassword');
+                if (saved) {
+                    document.documentElement.classList.add('auto-auth');
+                    window.__autoAuth = true;
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <div id="bootLoader">
+        <div class="loading-spinner"></div>
+        <span class="text-sm">読み込み中...</span>
+    </div>
     <!-- 認証画面 -->
     <div id="authContainer" class="auth-container">
         <div class="shadcn-card auth-card">
@@ -500,7 +531,7 @@
         }
 
         async function authenticate() {
-            const password = document.getElementById('password').value;
+            const password = document.getElementById('password').value || localStorage.getItem('sitePassword') || '';
             const loginBtn = document.getElementById('loginBtn');
             const errorDiv = document.getElementById('authError');
             
@@ -556,6 +587,9 @@
                 // UIを表示
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
+                const boot = document.getElementById('bootLoader');
+                if (boot) boot.style.display = 'none';
+                document.documentElement.classList.remove('auto-auth');
                 
                 // ツイートを表示
                 renderTweets();
@@ -563,6 +597,14 @@
             } catch (error) {
                 console.error('認証エラー:', error);
                 showAuthError('認証中にエラーが発生しました');
+                // 自動認証失敗時は保存パスワードを破棄して認証画面を表示
+                if (window.__autoAuth) {
+                    try { localStorage.removeItem('sitePassword'); } catch (e) {}
+                    document.documentElement.classList.remove('auto-auth');
+                    const boot = document.getElementById('bootLoader');
+                    if (boot) boot.style.display = 'none';
+                    document.getElementById('authContainer').style.display = 'block';
+                }
             } finally {
                 loginBtn.innerHTML = 'ログイン';
                 loginBtn.disabled = false;
