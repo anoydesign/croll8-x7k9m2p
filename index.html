@@ -544,11 +544,11 @@
                     id: row[1],
                     content: row[2] || '',
                     rt: parseInt(row[3] || '0'),
-                    likes: parseInt(row[4] || '0'),
-                    replies: parseInt(row[5] || '0'),
+                    replies: parseInt(row[4] || '0'),
+                    likes: parseInt(row[5] || '0'),
                     quotes: parseInt(row[6] || '0'),
-                    bookmarks: parseInt(row[7] || '0'),
-                    views: parseInt(row[8] || '0'),
+                    bookmarks: parseInt(row[8] || '0'),
+                    views: 0, // TSVにビュー数がないため0に設定
                     accountId: extractAccountId(row[0])
                 }));
                 
