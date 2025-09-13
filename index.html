@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Croll 8</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 222.2 84% 4.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 222.2 84% 4.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 222.2 84% 4.9%;
+            --muted: 210 40% 98%;
+            --muted-foreground: 215.4 16.3% 46.9%;
+            --accent: 210 40% 98%;
+            --accent-foreground: 222.2 84% 4.9%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 214.3 31.8% 91.4%;
+            --input: 214.3 31.8% 91.4%;
+            --ring: 222.2 84% 4.9%;
+            --radius: 0.5rem;
+        }
+        .dark {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --popover: 222.2 84% 4.9%;
+            --popover-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+        }
+
+        .shadcn-card {
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid hsl(var(--border));
+            background-color: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .shadcn-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: colors 0.2s;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            height: 2.25rem;
+        }
+
+        .shadcn-button:focus-visible {
+            outline: none;
+            ring: 2px solid hsl(var(--ring));
+            ring-offset: 2px;
+        }
+
+        .shadcn-button:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .shadcn-button-outline {
+            border: 1px solid hsl(var(--border));
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        .shadcn-button-outline:hover {
+            background-color: hsl(var(--accent));
+            color: hsl(var(--accent-foreground));
+        }
+
+        .shadcn-badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: calc(var(--radius) - 2px);
+            padding: 0.125rem 0.625rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1;
+            transition: colors 0.2s;
+        }
+
+        .shadcn-badge-secondary {
+            border: 1px solid transparent;
+            background-color: hsl(var(--muted));
+            color: hsl(var(--muted-foreground));
+        }
+
+        .shadcn-sheet {
+            position: fixed;
+            z-index: 50;
+            gap: 1rem;
+            background-color: hsl(var(--background));
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            right: 0;
+            top: 0;
+            height: 100vh;
+            width: min(92vw, 28rem);
+            border-left: 1px solid hsl(var(--border));
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        @media (min-width: 640px) {
+            .shadcn-sheet {
+                width: min(92vw, 540px);
+            }
+        }
+
+        .shadcn-sheet.open {
+            transform: translateX(0);
+        }
+
+        .sheet-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            background-color: rgb(0 0 0 / 0.8);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sheet-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .accordion-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            max-height: 0;
+        }
+
+        .accordion-content.open {
+            max-height: 1000px;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 認証関連スタイル */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: hsl(var(--muted));
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+        }
+
+        .auth-input {
+            width: 100%;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid hsl(var(--border));
+            background-color: hsl(var(--background));
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: hsl(var(--foreground));
+        }
+
+        .auth-input:focus {
+            outline: none;
+            ring: 2px solid hsl(var(--ring));
+            ring-offset: 2px;
+        }
+
+        .loading-spinner {
+            border: 2px solid hsl(var(--muted));
+            border-top: 2px solid hsl(var(--foreground));
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground">
+    <!-- 認証画面 -->
+    <div id="authContainer" class="auth-container">
+        <div class="shadcn-card auth-card">
+            <div class="space-y-6">
+                <div class="text-center space-y-2">
+                    <h1 class="text-2xl font-bold">Croll 8</h1>
+                    <p class="text-muted-foreground">アクセスにはパスワードが必要です</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="password" class="block text-sm font-medium mb-2">パスワード</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="auth-input"
+                            placeholder="パスワードを入力してください"
+                            onkeypress="handlePasswordKeyPress(event)"
+                        >
+                    </div>
+                    <button 
+                        onclick="authenticate()" 
+                        class="shadcn-button shadcn-button-outline w-full"
+                        id="loginBtn"
+                    >
+                        ログイン
+                    </button>
+                    <div id="authError" class="text-destructive text-sm text-center" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <div id="mainContent" style="display: none;">
+        <!-- Header -->
+        <header class="border-b bg-background">
+            <div class="container mx-auto px-4 py-6">
+                <div class="space-y-2">
+                    <h1 class="text-2xl font-bold">Croll 8</h1>
+                    <p class="text-muted-foreground">関連ツイート一覧</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-6 space-y-6">
+            <!-- Influential Accounts Accordion -->
+            <div class="shadcn-card p-4">
+                <button type="button" class="accordion-trigger flex items-center justify-between w-full text-left" onclick="toggleAccordion()" aria-expanded="false" aria-controls="accordionContent">
+                    <h2 class="text-base font-semibold">影響力の大きいアカウント（いいね数順 TOP20）</h2>
+                    <svg class="size-4 shrink-0 transition-transform duration-200" id="accordionIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(0deg);">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </button>
+                <div class="accordion-content mt-4" id="accordionContent">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b text-left">
+                                    <th class="pb-3 text-sm font-medium text-muted-foreground">順位</th>
+                                    <th class="pb-3 text-sm font-medium text-muted-foreground">アカウント</th>
+                                    <th class="pb-3 text-sm font-medium text-muted-foreground text-right">投稿数</th>
+                                    <th class="pb-3 text-sm font-medium text-muted-foreground text-right">合計いいね</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTable">
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('smith_john87277')">
+                                    <td class="py-3 text-sm">1</td>
+                                    <td class="py-3 text-sm font-medium">@smith_john87277</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">1,391</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('gk130409')">
+                                    <td class="py-3 text-sm">2</td>
+                                    <td class="py-3 text-sm font-medium">@gk130409</td>
+                                    <td class="py-3 text-sm text-right">3</td>
+                                    <td class="py-3 text-sm text-right font-semibold">1,386</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('bootree1818')">
+                                    <td class="py-3 text-sm">3</td>
+                                    <td class="py-3 text-sm font-medium">@bootree1818</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">1,209</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('hide_Q_')">
+                                    <td class="py-3 text-sm">4</td>
+                                    <td class="py-3 text-sm font-medium">@hide_Q_</td>
+                                    <td class="py-3 text-sm text-right">4</td>
+                                    <td class="py-3 text-sm text-right font-semibold">1,132</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('GW3CjJsMQ6n2ye1')">
+                                    <td class="py-3 text-sm">5</td>
+                                    <td class="py-3 text-sm font-medium">@GW3CjJsMQ6n2ye1</td>
+                                    <td class="py-3 text-sm text-right">6</td>
+                                    <td class="py-3 text-sm text-right font-semibold">741</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('KadotaRyusho')">
+                                    <td class="py-3 text-sm">6</td>
+                                    <td class="py-3 text-sm font-medium">@KadotaRyusho</td>
+                                    <td class="py-3 text-sm text-right">3</td>
+                                    <td class="py-3 text-sm text-right font-semibold">735</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('tanakaseiji15')">
+                                    <td class="py-3 text-sm">7</td>
+                                    <td class="py-3 text-sm font-medium">@tanakaseiji15</td>
+                                    <td class="py-3 text-sm text-right">4</td>
+                                    <td class="py-3 text-sm text-right font-semibold">601</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('tweetsoku1')">
+                                    <td class="py-3 text-sm">8</td>
+                                    <td class="py-3 text-sm font-medium">@tweetsoku1</td>
+                                    <td class="py-3 text-sm text-right">3</td>
+                                    <td class="py-3 text-sm text-right font-semibold">594</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('watanabeatushi')">
+                                    <td class="py-3 text-sm">9</td>
+                                    <td class="py-3 text-sm font-medium">@watanabeatushi</td>
+                                    <td class="py-3 text-sm text-right">38</td>
+                                    <td class="py-3 text-sm text-right font-semibold">583</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('pirooooon3')">
+                                    <td class="py-3 text-sm">10</td>
+                                    <td class="py-3 text-sm font-medium">@pirooooon3</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">563</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('nihonjintamasii')">
+                                    <td class="py-3 text-sm">11</td>
+                                    <td class="py-3 text-sm font-medium">@nihonjintamasii</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">433</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('lingualandjp')">
+                                    <td class="py-3 text-sm">12</td>
+                                    <td class="py-3 text-sm font-medium">@lingualandjp</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">400</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('kzooooo')">
+                                    <td class="py-3 text-sm">13</td>
+                                    <td class="py-3 text-sm font-medium">@kzooooo</td>
+                                    <td class="py-3 text-sm text-right">2</td>
+                                    <td class="py-3 text-sm text-right font-semibold">378</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('sorapiyo11111')">
+                                    <td class="py-3 text-sm">14</td>
+                                    <td class="py-3 text-sm font-medium">@sorapiyo11111</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">301</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('sxzBST')">
+                                    <td class="py-3 text-sm">15</td>
+                                    <td class="py-3 text-sm font-medium">@sxzBST</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">297</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('taroumaru025')">
+                                    <td class="py-3 text-sm">16</td>
+                                    <td class="py-3 text-sm font-medium">@taroumaru025</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">293</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('airi_fact_555')">
+                                    <td class="py-3 text-sm">17</td>
+                                    <td class="py-3 text-sm font-medium">@airi_fact_555</td>
+                                    <td class="py-3 text-sm text-right">2</td>
+                                    <td class="py-3 text-sm text-right font-semibold">263</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('hikaruganji')">
+                                    <td class="py-3 text-sm">18</td>
+                                    <td class="py-3 text-sm font-medium">@hikaruganji</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">242</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('Tanakaseiji14')">
+                                    <td class="py-3 text-sm">19</td>
+                                    <td class="py-3 text-sm font-medium">@Tanakaseiji14</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">229</td>
+                                </tr>
+                                
+                                <tr class="border-b hover:bg-muted/50 cursor-pointer" onclick="showAccountTweets('Zq3nhl467327')">
+                                    <td class="py-3 text-sm">20</td>
+                                    <td class="py-3 text-sm font-medium">@Zq3nhl467327</td>
+                                    <td class="py-3 text-sm text-right">1</td>
+                                    <td class="py-3 text-sm text-right font-semibold">223</td>
+                                </tr>
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tweets Section -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between border-b pb-4">
+                    <h2 class="text-base font-semibold">ツイート一覧</h2>
+                    <div class="flex items-center gap-2">
+                        <label for="sortSelect" class="text-sm text-muted-foreground">ソート:</label>
+                        <select id="sortSelect" onchange="sortTweets(this.value)" class="text-sm border border-border rounded px-2 py-1 bg-background">
+                            <option value="likes">いいね数（高い順）</option>
+                            <option value="rt">リツイート数（高い順）</option>
+                            <option value="replies">リプライ数（高い順）</option>
+                            <option value="views">表示回数（高い順）</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tweets Grid -->
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3" id="tweetsGrid">
+                    <!-- ツイートカードはJavaScriptで動的に生成 -->
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-between mt-6 pt-4 border-t">
+                    <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span id="paginationInfo">1-50 / 1280</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="prevPageBtn" class="shadcn-button shadcn-button-outline text-sm px-3 py-1 h-8" onclick="changePage(-1)" disabled>
+                            前へ
+                        </button>
+                        <span id="pageNumbers" class="flex items-center gap-1">
+                            <!-- ページ番号はJavaScriptで動的に生成 -->
+                        </span>
+                        <button id="nextPageBtn" class="shadcn-button shadcn-button-outline text-sm px-3 py-1 h-8" onclick="changePage(1)">
+                            次へ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Sheet Overlay -->
+    <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+    <!-- Sheet -->
+    <div class="shadcn-sheet" id="sheet">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold">ツイート詳細</h3>
+            <button onclick="closeSheet()" class="shadcn-button shadcn-button-outline size-8 p-0">
+                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4" id="sheetContent">
+            <!-- シート内容はJavaScriptで動的に生成 -->
+        </div>
+    </div>
+
+    <script>
+        // グローバル変数
+        let tweets = [];
+        let currentTweetIndex = -1;
+        let currentPage = 1;
+        const tweetsPerPage = 50;
+        let displayedTweets = [];
+        let isAuthenticated = false;
+        
+        // Google Apps Script API URL
+        const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwn9QJkDaGf7VgPNbsVP5Autez5qfX40ktqP2Eg1rZHac4EClpJlbqBUFkcLF7MjMQQbg/exec';
+
+        // 認証関連関数
+        function handlePasswordKeyPress(event) {
+            if (event.key === 'Enter') {
+                authenticate();
+            }
+        }
+
+        async function authenticate() {
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorDiv = document.getElementById('authError');
+            
+            if (!password) {
+                showAuthError('パスワードを入力してください');
+                return;
+            }
+
+            // ローディング状態
+            loginBtn.innerHTML = '<div class="loading-spinner"></div>';
+            loginBtn.disabled = true;
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`${GAS_API_URL}?password=${encodeURIComponent(password)}`);
+                const result = await response.json();
+                
+                if (result.error) {
+                    showAuthError('パスワードが間違っています');
+                    return;
+                }
+                
+                // 認証成功
+                localStorage.setItem('sitePassword', password);
+                isAuthenticated = true;
+                
+                // データをロード
+                tweets = result.data.slice(1).map(row => ({
+                    url: row[0],
+                    id: row[1],
+                    content: row[2] || '',
+                    rt: parseInt(row[3] || '0'),
+                    likes: parseInt(row[4] || '0'),
+                    replies: parseInt(row[5] || '0'),
+                    quotes: parseInt(row[6] || '0'),
+                    bookmarks: parseInt(row[7] || '0'),
+                    views: parseInt(row[8] || '0'),
+                    accountId: extractAccountId(row[0])
+                }));
+                
+                // UIを表示
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                
+                // ツイートを表示
+                renderTweets();
+                
+            } catch (error) {
+                console.error('認証エラー:', error);
+                showAuthError('認証中にエラーが発生しました');
+            } finally {
+                loginBtn.innerHTML = 'ログイン';
+                loginBtn.disabled = false;
+            }
+        }
+
+        function showAuthError(message) {
+            const errorDiv = document.getElementById('authError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function extractAccountId(url) {
+            try {
+                const match = url.match(/https:\/\/x\.com\/([^\/]+)\/status\//);
+                return match ? match[1] : 'unknown';
+            } catch (error) {
+                return 'unknown';
+            }
+        }
+
+        // 既存のツイート表示関数（認証後に使用）
+        function updateDisplayedTweets() {
+            const startIndex = (currentPage - 1) * tweetsPerPage;
+            const endIndex = startIndex + tweetsPerPage;
+            displayedTweets = tweets.slice(startIndex, endIndex);
+        }
+
+        function renderTweets() {
+            updateDisplayedTweets();
+            const grid = document.getElementById('tweetsGrid');
+            grid.innerHTML = '';
+            
+            displayedTweets.forEach((tweet, displayIndex) => {
+                const globalIndex = (currentPage - 1) * tweetsPerPage + displayIndex;
+                const card = document.createElement('div');
+                card.className = 'shadcn-card p-4 space-y-4 hover:shadow-md transition-shadow';
+                
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="text-sm leading-relaxed line-clamp-3">${tweet.content}</div>
+                        <div class="flex items-center gap-2">
+                            <span class="shadcn-badge shadcn-badge-secondary">@${tweet.accountId}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                            <span class="flex items-center gap-1">
+                                <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                                ${tweet.likes.toLocaleString()}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.77 15.67c-.292-.293-.767-.293-1.06 0l-2.22 2.22V7.65c0-2.068-1.683-3.75-3.75-3.75h-5.85c-.414 0-.75.336-.75.75s.336.75.75.75h5.85c1.24 0 2.25 1.01 2.25 2.25v10.24l-2.22-2.22c-.293-.293-.768-.293-1.061 0s-.293.768 0 1.061l3.5 3.5c.145.147.337.22.53.22s.383-.072.53-.22l3.5-3.5c.294-.292.294-.767.001-1.06z"/>
+                                    <path d="M10.22 5.69c.292.293.767.293 1.06 0l2.22-2.22V14.24c0 2.068 1.683 3.75 3.75 3.75h5.85c.414 0 .75-.336.75-.75s-.336-.75-.75-.75h-5.85c-1.24 0-2.25-1.01-2.25-2.25V3.76l2.22 2.22c.293.293.768.293 1.061 0s.293-.768 0-1.061L14.5 1.42c-.145-.147-.337-.22-.53-.22s-.383.072-.53.22L10.22 4.92c-.294.292-.294.767-.001 1.06z"/>
+                                </svg>
+                                ${tweet.rt.toLocaleString()}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M21 6h-2l-1.27-1.27c-.39-.39-.9-.73-1.43-.73H7.7c-.53 0-1.04.34-1.43.73L5 6H3c-.55 0-1 .45-1 1s.45 1 1 1h1v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8h1c.55 0 1-.45 1-1s-.45-1-1-1zM7 19c-.55 0-1-.45-1-1V9c0-.55.45-1 1-1s1 .45 1 1v9c0 .55-.45 1-1 1zm4 0c-.55 0-1-.45-1-1V9c0-.55.45-1 1-1s1 .45 1 1v9c0 .55-.45 1-1 1zm4 0c-.55 0-1-.45-1-1V9c0-.55.45-1 1-1s1 .45 1 1v9c0 .55-.45 1-1 1z"/>
+                                </svg>
+                                ${tweet.replies.toLocaleString()}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                ${tweet.views.toLocaleString()}
+                            </span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="btn-${globalIndex}" onclick="openSheet(${globalIndex})" class="shadcn-button shadcn-button-outline flex-1">
+                                詳細
+                            </button>
+                            <a href="${tweet.url}" target="_blank" rel="noopener noreferrer" class="shadcn-button shadcn-button-outline flex-1 text-center">
+                                実際の投稿
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            updatePaginationInfo();
+        }
+
+        function updatePaginationInfo() {
+            const totalPages = Math.ceil(tweets.length / tweetsPerPage);
+            const startItem = (currentPage - 1) * tweetsPerPage + 1;
+            const endItem = Math.min(currentPage * tweetsPerPage, tweets.length);
+            
+            document.getElementById('paginationInfo').textContent = `${startItem}-${endItem} / ${tweets.length}`;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            
+            renderPageNumbers(totalPages);
+        }
+
+        function renderPageNumbers(totalPages) {
+            const pageNumbers = document.getElementById('pageNumbers');
+            pageNumbers.innerHTML = '';
+            
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `shadcn-button text-xs px-2 py-1 h-7 ${i === currentPage ? 'bg-foreground text-background' : 'shadcn-button-outline'}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => goToPage(i);
+                pageNumbers.appendChild(pageBtn);
+            }
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(tweets.length / tweetsPerPage);
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderTweets();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(tweets.length / tweetsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTweets();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function sortTweets(sortType) {
+            tweets.sort((a, b) => {
+                switch(sortType) {
+                    case 'likes': return b.likes - a.likes;
+                    case 'rt': return b.rt - a.rt;
+                    case 'replies': return b.replies - a.replies;
+                    case 'views': return b.views - a.views;
+                    default: return b.likes - a.likes;
+                }
+            });
+            currentPage = 1;
+            renderTweets();
+        }
+
+        function openSheet(index) {
+            const globalIndex = (currentPage - 1) * tweetsPerPage + index;
+            const tweet = tweets[globalIndex];
+            currentTweetIndex = globalIndex;
+            
+            const button = document.getElementById(`btn-${index}`);
+            button.disabled = true;
+            button.textContent = '読み込み中...';
+            
+            const sheetContent = document.getElementById('sheetContent');
+            sheetContent.innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-sm font-semibold mb-3">ツイート内容</h3>
+                        <div class="text-sm leading-relaxed">${tweet.content}</div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-sm font-semibold mb-3">エンゲージメント</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">いいね:</span>
+                                <span class="font-semibold">${tweet.likes.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">リツイート:</span>
+                                <span class="font-semibold">${tweet.rt.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">リプライ:</span>
+                                <span class="font-semibold">${tweet.replies.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">表示回数:</span>
+                                <span class="font-semibold">${tweet.views.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-sm font-semibold mb-3">ツイート情報</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">アカウント:</span>
+                                <span class="font-medium">@${tweet.accountId}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">URL:</span>
+                                <a href="${tweet.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all block">${tweet.url}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('sheetOverlay').classList.add('open');
+            document.getElementById('sheet').classList.add('open');
+            
+            button.disabled = false;
+            button.textContent = '詳細';
+        }
+
+        function closeSheet() {
+            document.getElementById('sheetOverlay').classList.remove('open');
+            document.getElementById('sheet').classList.remove('open');
+            
+            if (currentTweetIndex >= 0) {
+                const displayIndex = currentTweetIndex - (currentPage - 1) * tweetsPerPage;
+                const button = document.getElementById(`btn-${displayIndex}`);
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = '詳細';
+                }
+            }
+            currentTweetIndex = -1;
+        }
+
+        function showAccountTweets(accountId) {
+            const accountTweets = tweets.filter(tweet => tweet.accountId === accountId);
+            currentTweetIndex = -1;
+            
+            const sheetContent = document.getElementById('sheetContent');
+            sheetContent.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-semibold">@${accountId} の投稿</h3>
+                        <p class="text-sm text-muted-foreground">${accountTweets.length}件の投稿</p>
+                    </div>
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        ${accountTweets.map(tweet => `
+                            <div class="border rounded p-3 space-y-2">
+                                <div class="text-sm leading-relaxed">${tweet.content}</div>
+                                <div class="flex justify-between items-center text-xs text-muted-foreground">
+                                    <div class="flex gap-3">
+                                        <span>❤️ ${tweet.likes.toLocaleString()}</span>
+                                        <span>🔄 ${tweet.rt.toLocaleString()}</span>
+                                        <span>💬 ${tweet.replies.toLocaleString()}</span>
+                                    </div>
+                                    <a href="${tweet.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">投稿を見る</a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('sheetOverlay').classList.add('open');
+            document.getElementById('sheet').classList.add('open');
+        }
+
+        window.toggleAccordion = function() {
+            const content = document.getElementById('accordionContent');
+            const icon = document.getElementById('accordionIcon');
+            const trigger = document.querySelector('[aria-controls="accordionContent"]');
+            const isOpen = content.classList.contains('open');
+            
+            if (isOpen) {
+                content.classList.remove('open');
+                icon.style.transform = 'rotate(0deg)';
+                trigger.setAttribute('aria-expanded', 'false');
+            } else {
+                content.classList.add('open');
+                icon.style.transform = 'rotate(180deg)';
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+        };
+
+        // 初期化：保存されたパスワードをチェック
+        window.addEventListener('load', function() {
+            const savedPassword = localStorage.getItem('sitePassword');
+            if (savedPassword) {
+                document.getElementById('password').value = savedPassword;
+                authenticate();
+            }
+        });
+    </script>
+</body>
+</html>
