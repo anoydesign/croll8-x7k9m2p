@@ -571,7 +571,8 @@
 
                 // データをロード（GASの列順に対応）
                 // ヘッダー: [url, twitterUrl, id, text, retweetCount, replyCount, likeCount, quoteCount, createdAt, bookmarkCount, isRetweet, isQuote]
-                tweets = result.data.slice(1).map(row => ({
+                const rows = result.data.slice(1).filter(row => row && row[0] && row[2]);
+                tweets = rows.map(row => ({
                     url: row[0],
                     id: row[2],
                     content: row[3] || '',
